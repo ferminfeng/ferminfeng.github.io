@@ -1,0 +1,12 @@
+---
+layout: post
+title:  "总感觉自己需要说点啥！!"
+date:   2017-05-28 16:00:13 +0000
+categories: fermin update
+---
+
+额，还是没想好要说啥！
+
+[jekyll-docs]: https://jekyllrb.com/docs/home
+[jekyll-gh]:   https://github.com/jekyll/jekyll
+[jekyll-talk]: https://talk.jekyllrb.com/

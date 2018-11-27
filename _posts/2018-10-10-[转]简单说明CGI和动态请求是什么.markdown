@@ -1,0 +1,169 @@
+---
+layout: post
+title:  "2018-10-10-[转]简单说明CGI和动态请求是什么"
+date:   2018-10-10 11:00:13 +0000
+categories: fermin update
+---
+
+
+```
+转载：http://www.cnblogs.com/f-ck-need-u/p/7627035.html
+```
+
+
+
+> ### 1.CG1是什么
+
+CGI是common gateway interface的缩写，大家都译作通用网关接口，但很不幸，我们无法见名知意。
+
+我们知道，web服务器所处理的内容都是静态的，要想处理动态内容，需要依赖web应用程序，如php、jsp、python、perl等。但是web server如何将动态的请求传递给这些应用程序？它所依赖的就是cgi协议。没错，是协议，也就是web server和web应用程序交流时的规范。换句话说，通过cgi协议，再结合自己搭建好的web应用程序，就可以让web server也能“处理”动态请求(或者说，当用户访问某个特定资源时，可以触发执行某个web应用程序来实现特定功能)，你肯定知道处理两字为什么要加双引号。
+
+简单版的cgi工作方式如下：
+
+![简单版的cgi工作方式](https://github.com//fyflzjz/fyflzjz.github.io/blob/master/image/2018-10-10-001/733013-20171004193828411-28489808.png?raw=true )
+
+
+
+例如，在谷歌搜索栏中搜索一个关键词“http”，对应的URL为：
+
+```
+https://www.google.com/search?q=http&oq=http&aqs=chrome..69i57j69i60l4j0.1136j0j8&sourceid=chrome&ie=UTF-8
+```
+
+当谷歌的web server收到该请求后，先分析该url，从中知道了要执行search程序，并且还知道了一系列要传递给search的参数及对应的value。web server会将这些程序参数和其它一些环境变量根据cgi协议通过TCP或套接字等方式传递给已启动的cgi程序(可能是cgi进程，或者是已加载的cgi模块)。当cgi进程接收到web server的请求后，调用search程序并执行，同时还会传递参数给search程序。search执行结束后，cgi进程/线程将处理结果返回给web server，web server再返回给浏览器。
+
+有多种方式可以执行cgi程序，但对http的请求方法来说，只有get和post两种方法允许执行cgi脚本(即上面的search程序)。实际上post方法的内部本质还是get方法，只不过在发送http请求时，get和post方法对url中的参数处理方式不一样而已。
+
+任何一种语言都能编写CGI，只不过有些语言比较擅长，有些语言则非常繁琐，例如用bash shell开发，那么需要用echo等打印语句将执行结果放在巨多无比的html的标签中输出 给客户端。常用语编写CGI的语言有perl、php、python等，java也一样能写，但java的servlet完全能实现CGI的功能，且更优化、更利于开发。
+
+> ### 2.各种术语释疑
+
+说实话，对于一个没接触过编程语言的人来说，刚接触cgi概念的时候肯定会有一堆疑问，这到底是什么鬼，处理动态内部的东西不是像php一样的应用程序吗，更cgi有几毛钱关系，fastcgi又是什么？我想，非科班出身的强迫症患者(包括我)一定会被这些概念折腾的死去活来。
+
+以php为例，我将一次动态请求相关的概念大致都简单解释一遍。
+
+1.`cig`：它是一种协议。通过cgi协议，web server可以将动态请求和相关参数发送给专门处理动态内容的应用程序。
+
+2.`fastcgi`：也是一种协议，只不过是cgi的优化版。cgi的性能较烂，fastcgi则在其基础上进行了改进。
+
+3.`php-cgi`：fastcgi是一种协议，而php-cgi实现了这种协议。不过这种事先比较烂。它是单进程的，一个进程处理一个请求，处理结束后进程就销毁。
+
+4.`php-fmp`：是对php-cgi的改进版，它直接管理多个php-cgi进程/线程。也就是说，**php-fpm是php-cgi的进程管理器**，因此它也算是fastcgi协议的实现。在一定程序上讲，php-fpm与php的关系，和tomcat对java的关系是类似的。
+
+5.`cgi进程/线程`：在php上，就是php-cgi进程/线程。专门用于接受web server的动态请求，**调用并初始化zend虚拟机**。
+
+6.`cgi脚本`：被执行的php源代码文件。
+
+7.`zend虚拟机`：对php文件做词法分析、语法分析、编译成opcode，并执行。最后 关闭zend虚拟机。
+
+8.`cgi进程/线程和zend虚拟机的关系`：cgi进程调用并初始化zend虚拟机的各种环境。
+
+以php-fpm为例，web server从转发动态请求到结束的过程大致如下：
+
+![web server从转发动态请求到结束的过程](https://github.com//fyflzjz/fyflzjz.github.io/blob/master/image/2018-10-10-001/733013-20171004193620568-1574617626.png?raw=true)
+
+而每个php-cgi进程的作用大致包括：（有些功能分类错误，请无视，知道大致功能就够了！）
+
+![php-cgi进程的作用](https://github.com//fyflzjz/fyflzjz.github.io/blob/master/image/2018-10-10-001/733013-20171004193753208-1919724771.png?raw=true)
+
+注意，尽管php-fpm的全称为PHP FastCGI Process Manager，但严格的讲，php-fpm不是fastcgi的进程管理器，而是php fastcgi即php-cgi的进程管理器。fastcgi只是一种协议，不是进程。就像http协议一样，apache对它的实现是httpd,nginx对它的实现就叫nginx。
+
+再次说明，cgi和fastcgi是一种协议。各种支持和web交互的编程语言对cgi/fastcgi协议都做了各自的实现(当然，任何一种语言都能写cgi脚本)，而php上的php-cgi和php-fpm正是php对fastcgi协议的实现。
+
+> ### 3. web server和CGI的交互模式
+
+web server对cgi进程/线程来说，它的作用就是发起动态处理请求，传递一些参数和环境变量，最后接收cgi的返回结果。再通俗而不严谨的说，web server通过cgi/fastcgi协议将动态请求转发给执行cgi脚本的应用程序。通过下面httpd.conf中的转发配置 应该很容易理解(httpd和php-fpm的交互)：
+
+```
+ProxyRequests off
+ProxyPassMatch ^/(.*\.php)$ fcgi://127.0.0.1:9000/usr/local/apache/htdocs/$1
+```
+
+以最典型的的apache httpd和php为例，对于httpd来说，web server和php-cgi有3种交互模式。
+
+`cgi模式`：httpd接收到一个动态请求就fork一个cgi进程，cgi进程返回结果给httpd进程后自我销毁。
+
+`动态模块模式`：将php-cgi的模块(例如php5_module)编译进httpd。在httpd启动时会加载模块，加载时也将对应的模块激活，php-cgi也就启动了。(注：纠正一个小小的错误，很多人以为动态编译的模块是可以在需要的时候随时加载调用，不需要的时候它们就停止了，实际上不是这样的。和静态编译的模块一样，动态加载的模块在被加载时就被加入到激活链表中，无论是否使用它，它都已经运行在apache httpd的内部。可参考LoadModule指令的官方手册)
+
+`php-fpm模式`：使用php-fpm管理php-cgi，此时httpd不再控制php-cgi进程的启动。可以将php-fpm独立运行在非web服务器上，实现所谓的动静分离。
+
+实际上，借助模块mod_fastcgi还可以实现fastcgi模式。同cgi一样，管理模式的先天缺陷决定了这并不是一种好方法。
+
+> ### 3.1 CGI模式
+
+使用CGI模式时，当动态请求到达，httpd临时启动一个cgi解释，并通过cgi协议转发要运行的内容。当cgi脚本运行结束后，将结果返回给httpd，然后cgi解释器进行自我销毁。当多个动态请求到达时，将先后启动多个cgi解释器。因此，这种方式效率极低。
+
+在注释掉php5_module的LoadModule相关行后，使用action指令置顶要使用cgi运行的类型。但注意，action指令是mod_action提供的，所以必须已经加载该模块。
+
+例如：指定MIME类型为image/gif的请求使用images.cgi运行。显然，images.cgi脚本你必须先写好。
+
+```
+Action image/gif /cgi-bin/images.cgi
+```
+
+还可以通过添加handler来复合文件类型，再使用某个cgi脚本去运行这个handler中的任意类型。
+
+```
+AddHandler my-file-type .xyz
+Action my-file-type "/cgi-bin/program.cgi"
+```
+
+对于php来说，则可以使用安装php时bin目录下提供的php-cgi程序作为cgi程序。
+
+```shell
+[root@xuexi php]# ls /usr/local/php/bin/
+pear  peardev  pecl  phar  phar.phar  php  php-cgi  php-config  phpize
+
+# 复制到apache默认的cgi-bin目录下，方便管理
+[root@xuexi php]# cp /usr/local/php/bin/php-cgi /usr/local/apache/cgi-bin/
+
+# 在httpd.conf中添加以下行
+Action application/x-httpd-php /usr/local/php/bin/cgi-bin/php-cgi
+```
+
+> ### 3.2 模块运行
+
+在编译php时，将php5_module模块编译到apache中，例如在编译php时在`./configure`配置中加上`--with-apxs2=/usr/local/apache/bin/apxs`。
+
+这种交互模式下，httpd在启动时加载并激活php_module。也就是说，php-cgi常驻在httpd进程内部。当动态请求到达时，httpd不用再生成cgi解释器，而是直接将动态请求转发给它内部php-cgi。
+
+配置使用这种交互模式非常简单，只需使用LoadModule加载php-module，再添加对应的MIME处理器即可。
+
+```php
+LoadModule php5_module modules/libphp5.so
+
+# 在mime模块中添加对应的类型
+<IfModule mime_module>
+AddType application/x-httpd-php .php
+AddType applicaiton/x-httpd-php-source .phps
+</IfModule>
+```
+
+> ### 3.3 php-fpm方式
+
+前面说了，php-fpm是php-cgi的进程管理器。这种交互方式实际上是让php-cgi以独立于httpd的方式存在，目前基本使用php-fpm的方式管理php-cgi进程。也就是说，这种模式下，php-cgi和httpd已经分离了，它们的分离意味着请求的动静分离变为可能：htppd和php-fpm分别运行在不同的服务器上。动静分离后，压力也分散到各自的服务器上。
+
+要让php-fpm以这种方式运行，需要在编译的`./configurl`配置选项中添加`-enable-fpm` 选项。当然，还得启动php-fpm服务。例如：
+
+```
+service php-fpm start
+```
+
+这样php-cgi进程就开放端口(默认9000)等待httpd转发动态请求。要让httpd能够转发请求到php-cgi上，需要在httpd.conf中关闭正向代理，并设置fastcgi协议代理参数。例如，转发到196.168.100.54主机上的php-fpm.
+
+```php
+# 加载代理模块
+LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so
+
+# 添加MIME类型
+AddType application/x-httpd-php .php
+AddType application/x-httpd-php-source .phps
+
+# 在需要转发的虚拟主机中配置转发代理
+ProxyRequests off
+ProxyPassMatch ^/(.*\.php)$ fcgi://192.168.100.54:9000/usr/local/apache/htdocs/$1
+```
+
+
+
