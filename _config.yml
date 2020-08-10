@@ -1,6 +1,6 @@
 # Site settings
 title: 初始台地Wen
-SEOTitle: fermin的博客 | 初始台地Wen
+SEOTitle: fermin的博客 | 初始台地
 header-img: img/home-bg.jpg
 email: ferminfeng@gmail.com
 description: ""
@@ -72,7 +72,7 @@ netease_comment: false
 
 # Google Analytics
 ga_track_id: 'test_ga_track_id'            # Format: UA-xxxxxx-xx
-ga_domain: blog.fermin.com.cn
+#ga_domain: blog.fermin.com.cn
 
 
 
