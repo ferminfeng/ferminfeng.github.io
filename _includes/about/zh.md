@@ -1,6 +1,6 @@
 
 
-> procedure oriented
+> 面向过程
 
 Hey，我是曾经。
 
