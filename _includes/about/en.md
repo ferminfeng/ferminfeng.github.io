@@ -11,4 +11,4 @@ Hi, I am fermin.
 
 - [title][1] · [2020](https://google.com)
 
-[6]: https://baidu.com 
+[]: https://baidu.com 
