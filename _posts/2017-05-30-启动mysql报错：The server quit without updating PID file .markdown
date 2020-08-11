@@ -10,11 +10,11 @@ categories: fermin update
 ```
 > mysql.server start
 Starting MySQL
-. ERROR! The server quit without updating PID file (/usr/local/var/mysql/fyflzjzMBP.lan.pid).
+. ERROR! The server quit without updating PID file (/usr/local/var/mysql/ferminMBP.lan.pid).
 ```
 
 这是由于mysql非正常关闭导致.pid文件没有清除
-只需进入[/usr/local/var/mysql/]内将[fyflzjzMBP.*.pid]格式的pid文件删除即可
+只需进入[/usr/local/var/mysql/]内将[ferminMBP.*.pid]格式的pid文件删除即可
 
 删除后再次重新启动mysql
 
