@@ -1,0 +1,274 @@
+---
+layout: post
+title:  "2023-07-19-Golang学习备忘录"
+date:   2023-07-19 10:08:00 +0000
+categories: fermin
+---
+*   一些临时备忘
+
+    结构体 需要使用 new()
+
+    map 需要使用 make()
+
+*   定义一个数组
+
+    s := \[]int{1, 2, 3}
+
+*   定义一个定长数组
+
+    var s \[3]int
+
+    s\[2] = 1111
+
+*   定义一个map
+
+```
+hash := map[byte]int{}
+
+
+nums := []int{2, 3, 1, 0, 2, 5, 3}
+make(map[int]bool, len(nums))
+make
+    为slice, map, channel分配内存分配内存，第二个参数为map的长度，第三个是预留总长度。
+    实际预留的长度是第三个参数减去第二个参数。
+    如果填第三个参数，则append()（追加数据进map中）后会自动扩容一倍长度（长度在1024以内会成倍扩容，超过1024则不会，超过1024扩容长度分别是288、384、512、864、1024）
+    
+    
+map：定义一个数组，并声明key/value的数据类型
+    map[int]bool    key的数据类型为int,value的数据类型为bool
+
+```
+
+*   for循环
+
+    for i := 1;i<=10;i++ {
+    ...
+    }
+
+    // s是数组、对象
+    for key, val := range s {
+    ...
+    }
+
+*   判断是否在数组中
+
+```
+判断数组中是否存在某个key
+    有个数组： hashArray = [1=> 2,2=>3,3=>4]
+    我想判断有没有2这个key
+    if hashArray[2]{
+        // 存在
+    }else{
+        // 不存在
+    }
+
+```
+
+*   高精度计算
+
+```go
+import "github.com/shopspring/decimal"
+
+
+a := decimal.NewFromFloat(1136.1)
+b := a.Mul(decimal.NewFromInt(100))
+fmt.Println(b) // 正确输出 113610
+
+c := decimal.NewFromFloat(1.7)
+fmt.Println(a.Sub(c)) // 正确输出 1134.4
+fmt.Println(b.Sub(c)) // 正确输出 113608.3
+
+
+
+a := decimal.NewFromFloat(1.52)
+b := decimal.NewFromFloat(0.02)
+
+// 加减乘除运算
+c := a.Add(b) // 1.52 + 0.02 = 1.54
+d := a.Sub(b) // 1.52 - 0.02 = 1.5
+e := a.Mul(b) // 1.52 * 0.02 = 0.0304
+f := a.Div(b) // 1.52 / 0.02 = 76
+fmt.Println(a, b, c, d, e, f)
+
+// 对于保留小数的处理
+pi := decimal.NewFromFloat(3.1415926535897932384626)
+pi1 := pi.Round(3)    // 对pi值四舍五入保留3位小数
+fmt.Println(pi1)       // 3.142
+pi2 := pi.Truncate(3) // 对pi值保留3位小数之后直接舍弃
+fmt.Println(pi2)       // 3.141
+
+
+
+
+var a float64
+var b = "69.77"
+var c int64
+
+d, err := decimal.NewFromString(b)
+if err != nil {
+	fmt.Println(err.Error())
+}
+
+a, _ = d.Float64()
+fmt.Println(a) // float64 69.77
+
+c = d.IntPart() // 舍去小数取整
+fmt.Println(c)  // int64 69
+
+b = decimal.NewFromInt(c).String()
+fmt.Println(b) // string 69
+
+c = d.Round(0).IntPart() // 不保留小数四舍五入取整
+fmt.Println(c)           // int64 70
+
+
+
+n1 := decimal.NewFromFloat(-1.23)
+n2 := decimal.NewFromInt(3)
+n3, _ := decimal.NewFromString("0")
+
+n1.Abs()                  // 取绝对值
+n1.Equal(n2)              // n1 是否与 n2 相等
+n1.LessThan(n2)           // n1 是否小于 n2
+n1.LessThanOrEqual(n2)    // n1 是否小于或等于 n2
+n1.GreaterThan(n2)        // n1 是否大于 n2
+n1.GreaterThanOrEqual(n2) // n1 是否大于或等于 n2
+n3.IsZero()               // n3 是否为0
+
+
+
+使用Decimal库的变量数据类型全部为decimal.Decimal，
+同样decimal.Decimal也可以作为声明变量时的数据类型使用，
+所以记得在最后做变量赋值时转换为需要的数据类型。
+
+	n1 := decimal.NewFromFloat(3.14)
+	var n2 string
+	var n3 float64
+	var n4 int64
+	var n5 decimal.Decimal
+
+	n2 = n1.String()
+	n3, _ = n1.Float64()
+	n4 = n1.IntPart()
+
+	fmt.Printf("n1 = %v, type = %v\n", n1, reflect.TypeOf(n1).String())
+	// n1 = 3.14, type = decimal.Decimal
+	fmt.Printf("n2 = %v, type = %v\n", n2, reflect.TypeOf(n2).String())
+	// n2 = 3.14, type = string
+	fmt.Printf("n3 = %v, type = %v\n", n3, reflect.TypeOf(n3).String())
+	// n3 = 3.14, type = float64
+	fmt.Printf("n4 = %v, type = %v\n", n4, reflect.TypeOf(n4).String())
+	// n4 = 3, type = int64
+	fmt.Printf("n5 = %v, type = %v\n", n5, reflect.TypeOf(n5).String())
+	// n5 = 0, type = decimal.Decimal
+	
+```
+
+*   单向链表
+
+    单向链表中每个结点包含两部分，分别是数据域和指针域，上一个结点的指针指向下一结点，依次相连，形成链表。
+
+    这里介绍三个概念：首元结点、头结点和头指针。
+    首元结点：就是链表中存储第一个元素的结点，如下图中 a1 的位置。
+    头结点：它是在首元结点之前附设的一个结点，其指针域指向首元结点。头结点的数据域可以存储链表的长度或者其它的信息，也可以为空不存储任何信息。
+    头指针：它是指向链表中第一个结点的指针。若链表中有头结点，则头指针指向头结点；若链表中没有头结点，则头指针指向首元结点。
+
+![image](http://c.biancheng.net/uploads/allimg/191129/4-1911291A225308.gif)
+
+```
+头结点在链表中不是必须的，但增加头结点有以下几点好处：
+增加了头结点后，首元结点的地址保存在头结点的指针域中，对链表的第一个数据元素的操作与其他数据元素相同，无需进行特殊处理。
+增加头结点后，无论链表是否为空，头指针都是指向头结点的非空指针，若链表为空的话，那么头结点的指针域为空。
+
+```
+
+*   生成链表
+
+```golang
+type ListNode struct {
+	Val  int
+	Next *ListNode
+}
+
+func makeListNode(s []int) *ListNode {
+	// 数组为空直接返回
+	if len(s) == 0 {
+		return nil
+	}
+
+	// 初始化第一个节点并赋值
+	node := &ListNode{
+		Val: s[0],
+	}
+
+	//fmt.Println("\n\n第0个结点", &node, "\n")
+	tmp := node
+	for i := 1; i < len(s); i++ {
+		tmp.Next = &ListNode{
+			Val: s[i],
+		}
+		//fmt.Println("\n第", i, "个结点", tmp, "\n")
+		//fmt.Println("\n第", i, "个结点", tmp.Next, "\n")
+		tmp = tmp.Next
+	}
+
+	return node
+}
+
+```
+
+*   遍历链表
+
+```golang
+func (l *ListNode) PrintListNodeASC() {
+	var s []int
+	//fmt.Println(l)
+	ptr := l
+	//fmt.Println(ptr)
+	for ptr != nil {
+		//fmt.Println(ptr.Val)
+		s = append(s, ptr.Val)
+		ptr = ptr.Next
+	}
+	for _, v := range s {
+		fmt.Println(v)
+	}
+}
+```
+
+*   迭代翻转链表
+
+```golang
+假设存在链表 1→2→3→∅，我们想要把它改成 ∅←1←2←3。
+
+在遍历列表时，将当前节点的 next 指针改为指向前一个元素。
+由于节点没有引用其上一个节点，因此必须事先存储其前一个元素。
+在更改引用之前，还需要另一个指针来存储下一个节点。
+不要忘记在最后返回新的头引用！
+
+func reversePrint1(head *ListNode) []int {
+	// 先反转再遍历-迭代实现
+	if head == nil {
+		return nil
+	}
+
+	// 1.迭代反转链表
+	var prev *ListNode
+	cur := head
+	for cur != nil {
+		next := cur.Next
+		cur.Next = prev
+		prev = cur
+		cur = next
+	}
+	
+	// 2.遍历打印链表
+	ans := []int{}
+	for prev != nil {
+		ans = append(ans, prev.Val)
+		prev = prev.Next
+	}
+	return ans
+}
+```
+
